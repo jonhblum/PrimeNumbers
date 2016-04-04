@@ -1,2 +1,2 @@
 # PrimeNumbers
-Prime number algorithms and Rest Service
+Prime number algorithms and REST Service
