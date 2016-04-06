@@ -1,5 +1,7 @@
 package primenumbers.web;
 
+import static primenumbers.core.checker.PrimeCheckResult.createError;
+
 import java.util.List;
 
 import javax.ws.rs.DefaultValue;
@@ -10,15 +12,18 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import primenumbers.core.checker.PrimeCheckResult;
 import primenumbers.core.checker.PrimeChecker;
 import primenumbers.core.list.PrimeListGenerator;
 
-import static primenumbers.core.checker.PrimeCheckResult.createError;
-
 @Path("/prime-numbers")
 public class PrimeNumberService {
 	 
+	private final Logger logger = LoggerFactory.getLogger(PrimeNumberService.class);
+	
 	private static final String NULL_ARGUMENT = "Null argument";
 	private static final String CHECKER_NOT_INITIALISED = "Checker not initialised";
 	private static final String LIST_GENERATOR_NOT_INITIALISED = "List generator not initialised";
@@ -49,6 +54,8 @@ public class PrimeNumberService {
     		@PathParam("candidate")  String candidate, 
     		@DefaultValue(MappedHandler.DEFAULT) @QueryParam("impl") String checkername) {
     	
+    	logger.info(String.format("Call to check prime, candidate: %s, impl: %s", candidate, checkername));
+    	
     	PrimeChecker checker = checkers.getHandler(checkername);
 
     	if (checker == null)
@@ -65,15 +72,31 @@ public class PrimeNumberService {
     	{    		
     		long candidateNumber = Long.parseLong(candidate);
     		
-        	return checker.checkPrime(candidateNumber);
+        	long start = System.currentTimeMillis();
+
+        	PrimeCheckResult result = checker.checkPrime(candidateNumber);
+        	
+        	long end = System.currentTimeMillis();
+
+        	logger.info(String.format("Call to check prime took %s ms", end-start));
+        	
+        	return result;
     	}
     	catch (NumberFormatException nfe)
     	{
-    		return createError(String.format("Error parsing argument: %s", nfe.getMessage()));
+    		String errorMessage = String.format("Error parsing argument: %s", nfe.getMessage());
+    		
+        	logger.error(errorMessage);
+
+        	return createError(errorMessage);
     	}    	
     	catch (Exception e)
     	{
-    		return createError(String.format("Error in check prime: %s", e.getMessage()));
+    		String errorMessage = String.format("Error in check prime: %s", e.getMessage());
+    		
+        	logger.error(errorMessage);
+
+        	return createError(String.format(errorMessage));
     	}    	
     }
 
@@ -82,9 +105,11 @@ public class PrimeNumberService {
     @Produces(MediaType.APPLICATION_JSON)
     public PrimeNumberList getPrimes(
     		@PathParam("maximum") String maximum, 
-    		@DefaultValue(MappedHandler.DEFAULT) @QueryParam("impl") String checkername) {
+    		@DefaultValue(MappedHandler.DEFAULT) @QueryParam("impl") String listName) {
 
-    	PrimeListGenerator generator = generators.getHandler(checkername);
+    	logger.info(String.format("Call to check prime, candidate: %s, impl: %s", maximum, listName));
+    	    	
+    	PrimeListGenerator generator = generators.getHandler(listName);
 
     	if (generator == null)
     	{
@@ -99,18 +124,32 @@ public class PrimeNumberService {
     	try
     	{
     		int maximumNumber = Integer.parseInt(maximum);
-    	    		
+
+        	long start = System.currentTimeMillis();
+
         	List<Integer> primeList = generator.getPrimes(maximumNumber);
-        	
-    		return new PrimeNumberList(primeList);
+        	        	
+        	long end = System.currentTimeMillis();
+
+        	logger.info(String.format("Call to check prime took %s ms", end-start));
+
+        	return new PrimeNumberList(primeList);
     	}
     	catch (NumberFormatException nfe)
     	{
-    		return new PrimeNumberList(String.format("Error parsing argument: %s", nfe.getMessage()));
+    		String errorMessage = String.format("Error parsing argument: %s", nfe.getMessage());
+    		
+        	logger.error(errorMessage);
+    		
+    		return new PrimeNumberList(errorMessage);
     	}    	
     	catch (Exception e)
     	{
-    		return new PrimeNumberList(String.format("Error generating primes: %s", e.getMessage()));
+    		String errorMessage = String.format("Error generating primes: %s", e.getMessage());
+    		
+        	logger.error(errorMessage);
+
+        	return new PrimeNumberList(errorMessage);
     	}    	
     }
 }

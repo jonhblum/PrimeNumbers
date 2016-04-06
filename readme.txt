@@ -1,6 +1,6 @@
 PrimeNumbers - Jonathan Blum
 
-This application is written in Java and requires Maven to build and Java 1.8 compiler and JVM.
+This application is written in Java and requires Maven to build and Java 8 compiler and JVM.
 
 It runs an embedded Jetty server, providing a Jersey based REST Service.
 
